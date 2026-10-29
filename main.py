@@ -1,5 +1,6 @@
 from pathlib import Path
 from enum import Enum
+from decimal import Decimal
 # from abc import ABC, abstractmethod
 
 
@@ -59,9 +60,9 @@ class Order:
 
 def getProductPrice(product):
     PRODUCT_PRICE = {
-        "BOOK": 40,
-        "PEN": 5,
-        "BAG": 80,
+        "BOOK": Decimal(40),
+        "PEN": Decimal(5),
+        "BAG": Decimal(80),
     }
 
     return PRODUCT_PRICE.get(product, 0)
@@ -123,19 +124,19 @@ class MemberType(Enum):
 
 
 DISCOUNTS = {
-    "SAVE10": 0.9,
-    MemberType.REGULAR: 1.0,
-    MemberType.VIP: 0.9,
-    MemberType.STUDENT: 0.95,
+    "SAVE10": Decimal(0.9),
+    MemberType.REGULAR: Decimal(1.0),
+    MemberType.VIP: Decimal(0.9),
+    MemberType.STUDENT: Decimal(0.95),
 }
 
 
 def applyDiscount(price, discountReason):
-    return price * DISCOUNTS.get(discountReason, 1.0)
+    return price * DISCOUNTS.get(discountReason, Decimal(1.0))
 
 
-FREE_DELIVERY_THRESHOLD = 100
-DELIVERY_COST = 12
+FREE_DELIVERY_THRESHOLD = Decimal(100)
+DELIVERY_COST = Decimal(12)
 
 
 def applyDeliveryCost(price):
@@ -144,7 +145,7 @@ def applyDeliveryCost(price):
     return price
 
 
-TAXES_PERCENTAGE = 0.23
+TAXES_PERCENTAGE = Decimal(0.23)
 
 
 def applyTaxes(price):
