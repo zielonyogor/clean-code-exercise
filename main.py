@@ -18,6 +18,34 @@ from enum import Enum
 
 
 class Order:
+    def __init__(self, orderStringRepresentation):
+        self.details = self.OrderDetails(orderStringRepresentation)
+
+    class ProductsHolder:
+        def __init__(self, productsStringRepresentation):
+            self.products = []
+            for productWithQuantity in productsStringRepresentation.split(','):
+                product, quantityStr = productWithQuantity.split(":")
+                self.products.append([product, int(quantityStr)])
+
+        def getTotalPrice(self):
+            return sum([PRODUCT_PRICE.get(product, 0) * quantity for product, quantity in self.products])
+
+        def __str__(self):
+            return "".join(f"{product}x{quantity};" for product, quantity in self.products)
+
+    class OrderDetails:
+        def __init__(self, orderStringRepresentation):
+            self.__extractDetails(orderStringRepresentation)
+
+        def __extractDetails(self, orderStringRepresentation):
+            orderInformation = orderStringRepresentation.split("|")
+            self.name = orderInformation[0]
+            self.email = orderInformation[1]
+            self.memberType = MemberType[orderInformation[2]]
+            self.products = Order.ProductsHolder(orderInformation[3])
+            self.discountCode = orderInformation[4]
+
     def send(self, x):
         print("EMAIL " + x)
 
@@ -36,52 +64,49 @@ PRODUCT_PRICE = {
 }
 
 
-counter = 0
-total = 0
+class OrderProcessor:
+    def __init__(self):
+        self.counter = 0
+        self.total = 0
 
+    def _order(self, orderInformationString, verbose, send, save):
+        obj = Order(orderInformationString)
+        details = obj.details
 
-def order(orderInformationString, verbose, send, save):
-    global counter, total
-    try:
-        orderInformation = orderInformationString.split("|")
-        n, e, t = orderInformation[0], orderInformation[1], orderInformation[2]
-        products = orderInformation[3].split(",")
-        price = 0
-        detail = ""
-        for q in products:
-            c = q.split(":")
-            price += PRODUCT_PRICE.get(c[0], 0) * int(c[1])
-            detail += c[0] + "x" + c[1] + ";"
-        price *= DISCOUNTS.get(MemberType[t], 1.0)
-        price *= DISCOUNTS.get(orderInformation[4], 1.0)
+        price = details.products.getTotalPrice()
+        detail = str(details.products)
+
+        price *= DISCOUNTS.get(details.memberType, 1.0)
+        price *= DISCOUNTS.get(details.discountCode, 1.0)
+
         if price < FREE_DELIVERY_THRESHOLD:
             price += DELIVERY_COST
         price *= 1 + TAXES_PERCENTAGE
-        orderDescription = f"ORDER|{n}|{detail}|{price:.2f}"
-        counter += 1
-        total += price
-        obj = Order()
-        if save:
-            obj.save(orderDescription)
-        if send:
-            obj.send(e + "|" + orderDescription)
-        if verbose:
-            print(orderDescription)
-        return orderDescription
-    except Exception:
-        return "ERROR"
 
+        orderDescription = f"ORDER|{details.name}|{detail}|{price:.2f}"
+        self.counter += 1
+        self.total += price
 
-def showReport():
-    print(f"REPORT|{counter}|{total:.2f}")
+        try:
+            if save:
+                obj.save(orderDescription)
+            if send:
+                obj.send(details.email + "|" + orderDescription)
+            if verbose:
+                print(orderDescription)
+            return orderDescription
+        except Exception:
+            return "ERROR"
 
+    def _showReport(self):
+        print(f"REPORT|{self.counter}|{self.total:.2f}")
 
-def executeAction(command, info="", verbose=True, send=True, save=True):
-    if command == Action.ORDER:
-        return order(info, verbose, send, save)
-    if command == Action.REPORT:
-        return showReport()
-    return "UNKNOWN"
+    def executeAction(self, command, info="", verbose=True, send=True, save=True):
+        if command == Action.ORDER:
+            return self._order(info, verbose, send, save)
+        if command == Action.REPORT:
+            return self._showReport()
+        return "UNKNOWN"
 
 
 class Action(Enum):
@@ -111,14 +136,16 @@ TAXES_PERCENTAGE = 0.23
 
 
 if __name__ == "__main__":
-    executeAction(
+    processor = OrderProcessor()
+
+    processor.executeAction(
         Action.ORDER,
         "Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10",
         True,
         True,
         True,
     )
-    executeAction(
+    processor.executeAction(
         Action.ORDER, "Bob|bob@example.test|REGULAR|BAG:2|NONE", True, True, True
     )
-    executeAction(Action.REPORT)
+    processor.executeAction(Action.REPORT)
