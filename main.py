@@ -1,18 +1,22 @@
 from pathlib import Path
+# from abc import ABC, abstractmethod
 
 
-class Everything:
-    def send(self, x):
-        raise NotImplementedError()
+# class Everything(ABC):
+#     @abstractmethod
+#     def send(self, x):
+#         pass
 
-    def save(self, x):
-        raise NotImplementedError()
+#     @abstractmethod
+#     def save(self, x):
+#         pass
 
-    def refund(self, x):
-        raise NotImplementedError()
+#     @abstractmethod
+#     def refund(self, x):
+#         pass
 
 
-class Thing(Everything):
+class Thing:
     def send(self, x):
         print("EMAIL " + x)
 
@@ -24,14 +28,11 @@ class Thing(Everything):
         raise NotImplementedError("Not supported")
 
 
-mode = "production"
 counter = 0
 total = 0
-cache = {}
-future_currencies = ["EUR", "USD", "BTC", "POINTS"]
 
 
-def doIt(s, action, verbose, send, save, unused):
+def doIt(s, action, verbose, send, save):
     global counter, total
     try:
         if action == 2:
@@ -70,7 +71,6 @@ def doIt(s, action, verbose, send, save, unused):
         x = f"ORDER|{n}|{detail}|{z:.2f}"
         counter += 1
         total += z
-        cache[e] = x
         obj = Thing()
         if save:
             obj.save(x)
@@ -84,6 +84,6 @@ def doIt(s, action, verbose, send, save, unused):
 
 
 if __name__ == "__main__":
-    doIt("Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10", 1, True, True, True, 999)
-    doIt("Bob|bob@example.test|REGULAR|BAG:2|NONE", 1, True, True, True, 999)
-    doIt("", 2, True, False, False, 999)
+    doIt("Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10", 1, True, True, True)
+    doIt("Bob|bob@example.test|REGULAR|BAG:2|NONE", 1, True, True, True)
+    doIt("", 2, True, False, False)
