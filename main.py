@@ -29,7 +29,7 @@ class Order:
                 self.products.append([product, int(quantityStr)])
 
         def getTotalPrice(self):
-            return sum([PRODUCT_PRICE.get(product, 0) * quantity for product, quantity in self.products])
+            return sum([getProductPrice(product) * quantity for product, quantity in self.products])
 
         def __str__(self):
             return "".join(f"{product}x{quantity};" for product, quantity in self.products)
@@ -57,11 +57,14 @@ class Order:
         raise NotImplementedError("Not supported")
 
 
-PRODUCT_PRICE = {
-    "BOOK": 40,
-    "PEN": 5,
-    "BAG": 80,
-}
+def getProductPrice(product):
+    PRODUCT_PRICE = {
+        "BOOK": 40,
+        "PEN": 5,
+        "BAG": 80,
+    }
+
+    return PRODUCT_PRICE.get(product, 0)
 
 
 class OrderProcessor:
@@ -76,12 +79,11 @@ class OrderProcessor:
         price = details.products.getTotalPrice()
         detail = str(details.products)
 
-        price *= DISCOUNTS.get(details.memberType, 1.0)
-        price *= DISCOUNTS.get(details.discountCode, 1.0)
+        price = applyDiscount(price, details.memberType)
+        price = applyDiscount(price, details.discountCode)
 
-        if price < FREE_DELIVERY_THRESHOLD:
-            price += DELIVERY_COST
-        price *= 1 + TAXES_PERCENTAGE
+        price = applyDeliveryCost(price)
+        price = applyTaxes(price)
 
         orderDescription = f"ORDER|{details.name}|{detail}|{price:.2f}"
         self.counter += 1
@@ -128,11 +130,25 @@ DISCOUNTS = {
 }
 
 
+def applyDiscount(price, discountReason):
+    return price * DISCOUNTS.get(discountReason, 1.0)
+
+
 FREE_DELIVERY_THRESHOLD = 100
 DELIVERY_COST = 12
 
 
+def applyDeliveryCost(price):
+    if price < FREE_DELIVERY_THRESHOLD:
+        price += DELIVERY_COST
+    return price
+
+
 TAXES_PERCENTAGE = 0.23
+
+
+def applyTaxes(price):
+    return price * (1 + TAXES_PERCENTAGE)
 
 
 if __name__ == "__main__":
