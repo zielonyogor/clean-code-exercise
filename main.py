@@ -16,7 +16,7 @@ from pathlib import Path
 #         pass
 
 
-class Thing:
+class Order:
     def send(self, x):
         print("EMAIL " + x)
 
@@ -32,22 +32,15 @@ counter = 0
 total = 0
 
 
-def doIt(s, action, verbose, send, save):
+def order(orderInformationString, verbose, send, save):
     global counter, total
     try:
-        if action == 2:
-            x = f"REPORT|{counter}|{total:.2f}"
-            if verbose:
-                print(x)
-            return x
-        if action != 1:
-            return "UNKNOWN"
-        a = s.split("|")
-        n, e, t = a[0], a[1], a[2]
-        b = a[3].split(",")
-        z = 0
+        orderInformation = orderInformationString.split("|")
+        n, e, t = orderInformation[0], orderInformation[1], orderInformation[2]
+        products = orderInformation[3].split(",")
+        price = 0
         detail = ""
-        for q in b:
+        for q in products:
             c = q.split(":")
             if c[0] == "BOOK":
                 p = 40
@@ -57,33 +50,45 @@ def doIt(s, action, verbose, send, save):
                 p = 80
             else:
                 p = 0
-            z += p * int(c[1])
+            price += p * int(c[1])
             detail += c[0] + "x" + c[1] + ";"
         if t == "VIP":
-            z *= 0.9
+            price *= 0.9
         elif t == "STUDENT":
-            z *= 0.95
-        if a[4] == "SAVE10":
-            z *= 0.9
-        if z < 100:
-            z += 12
-        z *= 1.23
-        x = f"ORDER|{n}|{detail}|{z:.2f}"
+            price *= 0.95
+        if orderInformation[4] == "SAVE10":
+            price *= 0.9
+        if price < 100:
+            price += 12
+        price *= 1.23
+        orderDescription = f"ORDER|{n}|{detail}|{price:.2f}"
         counter += 1
-        total += z
-        obj = Thing()
+        total += price
+        obj = Order()
         if save:
-            obj.save(x)
+            obj.save(orderDescription)
         if send:
-            obj.send(e + "|" + x)
+            obj.send(e + "|" + orderDescription)
         if verbose:
-            print(x)
-        return x
+            print(orderDescription)
+        return orderDescription
     except Exception:
         return "ERROR"
 
 
+def showReport():
+    print(f"REPORT|{counter}|{total:.2f}")
+
+
+def executeAction(command, info="", verbose=True, send=True, save=True):
+    if command == 1:
+        return order(info, verbose, send, save)
+    if command == 2:
+        return showReport()
+    return "UNKNOWN"
+
+
 if __name__ == "__main__":
-    doIt("Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10", 1, True, True, True)
-    doIt("Bob|bob@example.test|REGULAR|BAG:2|NONE", 1, True, True, True)
-    doIt("", 2, True, False, False)
+    executeAction(1, "Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10", True, True, True)
+    executeAction(1, "Bob|bob@example.test|REGULAR|BAG:2|NONE", True, True, True)
+    executeAction(2)
