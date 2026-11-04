@@ -55,7 +55,7 @@ class OrderProcessor:
         self.counter = 0
         self.total = 0
 
-    def _order(self, orderInformationString, verbose, send, save):
+    def order(self, orderInformationString, verbose=True, send=True, save=True):
         order = Order(orderInformationString)
         details = order.details
 
@@ -83,20 +83,17 @@ class OrderProcessor:
         except Exception:
             return "ERROR"
 
-    def _showReport(self):
+    def report(self):
         print(f"REPORT|{self.counter}|{self.total:.2f}")
 
-    def executeAction(self, command, info="", verbose=True, send=True, save=True):
-        if command == Action.ORDER:
-            return self._order(info, verbose, send, save)
-        if command == Action.REPORT:
-            return self._showReport()
-        return "UNKNOWN"
 
-
-class Action(Enum):
-    ORDER = 1
-    REPORT = 2
+def handleCommand(processor, commandLine):
+    command, _, payload = commandLine.partition(" ")
+    if command == "ORDER":
+        return processor.order(payload)
+    if command == "REPORT":
+        return processor.report()
+    return "UNKNOWN"
 
 
 class MemberType(Enum):
@@ -144,6 +141,6 @@ def applyTaxes(price):
 if __name__ == "__main__":
     processor = OrderProcessor()
 
-    processor.executeAction(Action.ORDER, "Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10")
-    processor.executeAction(Action.ORDER, "Bob|bob@example.test|REGULAR|BAG:2|NONE")
-    processor.executeAction(Action.REPORT)
+    handleCommand(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10")
+    handleCommand(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE")
+    handleCommand(processor, "REPORT")
