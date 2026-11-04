@@ -69,3 +69,27 @@ We removed global variables `counter` and `total`; they are now fields of `Order
 ## Money precision
 
 We replaced `float` with `Decimal` for prices, discounts, delivery cost and taxes to avoid floating point errors in money calculations.
+
+## Further cleanup
+
+We removed the leftovers of the previous steps and simplified the code.
+
+| Change | Reason |
+|--------|--------|
+| removed commented-out class `Everything` | commented-out code is still dead code |
+| removed `refund()` method | neither implemented nor used |
+| `DISCOUNTS` split into `MEMBER_DISCOUNTS` and `COUPON_DISCOUNTS` | member types and coupons are different concepts |
+| `applyDiscount()` split into `applyMemberDiscount()` and `applyCouponDiscount()` | each function applies one kind of discount |
+| default values for `verbose`, `send`, `save` | callers no longer pass `True, True, True` |
+| `executeAction()` moved out of `OrderProcessor` as `handleCommand()` | command handling is separated from order logic; streaming input can still call operations generically |
+| `Action(Enum)` replaced with text commands `ORDER <order line>` and `REPORT` | commands can be read directly from input |
+
+### Naming
+
+| Old Name | New Name |
+|----------|----------|
+| `obj` | `order` |
+| `x` | `message`, `orderDescription` |
+| `detail` | `productsDescription` |
+| `_order()` | `order()` |
+| `_showReport()` | `report()` |
