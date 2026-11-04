@@ -53,3 +53,19 @@ We extracted classes and functions to improve code organization and readability.
   - `generateReport()`: generates a report for the processed order
 
 ## Functions extraction
+
+We extracted functions to improve code organization and readability.
+
+* `getProductPrice()`: returns the price of a product from `PRODUCT_PRICE`
+* `applyDiscount()`: applies a discount based on member type or discount code from `DISCOUNTS`
+* `applyDeliveryCost()`: adds `DELIVERY_COST` when the price is below `FREE_DELIVERY_THRESHOLD`
+* `applyTaxes()`: adds `TAXES_PERCENTAGE` to the price
+* `executeAction()`: runs the given `Action` instead of checking magic numbers in `doIt()`
+
+## Global state
+
+We removed global variables `counter` and `total`; they are now fields of `OrderProcessor`.
+
+## Money precision
+
+We replaced `float` with `Decimal` for prices, discounts, delivery cost and taxes to avoid floating point errors in money calculations.
