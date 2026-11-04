@@ -32,12 +32,12 @@ class Order:
             self.products = Order.ProductsHolder(orderInformation[3])
             self.discountCode = orderInformation[4]
 
-    def send(self, x):
-        print("EMAIL " + x)
+    def send(self, message):
+        print("EMAIL " + message)
 
-    def save(self, x):
+    def save(self, orderDescription):
         with Path("orders.txt").open("a", encoding="utf-8") as f:
-            f.write(x + "\n")
+            f.write(orderDescription + "\n")
 
 
 def getProductPrice(product):
@@ -56,11 +56,11 @@ class OrderProcessor:
         self.total = 0
 
     def _order(self, orderInformationString, verbose, send, save):
-        obj = Order(orderInformationString)
-        details = obj.details
+        order = Order(orderInformationString)
+        details = order.details
 
         price = details.products.getTotalPrice()
-        detail = str(details.products)
+        productsDescription = str(details.products)
 
         price = applyDiscount(price, details.memberType)
         price = applyDiscount(price, details.discountCode)
@@ -68,15 +68,15 @@ class OrderProcessor:
         price = applyDeliveryCost(price)
         price = applyTaxes(price)
 
-        orderDescription = f"ORDER|{details.name}|{detail}|{price:.2f}"
+        orderDescription = f"ORDER|{details.name}|{productsDescription}|{price:.2f}"
         self.counter += 1
         self.total += price
 
         try:
             if save:
-                obj.save(orderDescription)
+                order.save(orderDescription)
             if send:
-                obj.send(details.email + "|" + orderDescription)
+                order.send(details.email + "|" + orderDescription)
             if verbose:
                 print(orderDescription)
             return orderDescription
