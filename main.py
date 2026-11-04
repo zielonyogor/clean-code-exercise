@@ -144,14 +144,6 @@ def applyTaxes(price):
 if __name__ == "__main__":
     processor = OrderProcessor()
 
-    processor.executeAction(
-        Action.ORDER,
-        "Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10",
-        True,
-        True,
-        True,
-    )
-    processor.executeAction(
-        Action.ORDER, "Bob|bob@example.test|REGULAR|BAG:2|NONE", True, True, True
-    )
+    processor.executeAction(Action.ORDER, "Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10")
+    processor.executeAction(Action.ORDER, "Bob|bob@example.test|REGULAR|BAG:2|NONE")
     processor.executeAction(Action.REPORT)
