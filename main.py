@@ -62,8 +62,8 @@ class OrderProcessor:
         price = details.products.getTotalPrice()
         productsDescription = str(details.products)
 
-        price = applyDiscount(price, details.memberType)
-        price = applyDiscount(price, details.discountCode)
+        price = applyMemberDiscount(price, details.memberType)
+        price = applyCouponDiscount(price, details.discountCode)
 
         price = applyDeliveryCost(price)
         price = applyTaxes(price)
@@ -105,16 +105,23 @@ class MemberType(Enum):
     STUDENT = 3
 
 
-DISCOUNTS = {
-    "SAVE10": Decimal(0.9),
+MEMBER_DISCOUNTS = {
     MemberType.REGULAR: Decimal(1.0),
     MemberType.VIP: Decimal(0.9),
     MemberType.STUDENT: Decimal(0.95),
 }
 
+COUPON_DISCOUNTS = {
+    "SAVE10": Decimal(0.9),
+}
 
-def applyDiscount(price, discountReason):
-    return price * DISCOUNTS.get(discountReason, Decimal(1.0))
+
+def applyMemberDiscount(price, memberType):
+    return price * MEMBER_DISCOUNTS.get(memberType, Decimal(1.0))
+
+
+def applyCouponDiscount(price, couponCode):
+    return price * COUPON_DISCOUNTS.get(couponCode, Decimal(1.0))
 
 
 FREE_DELIVERY_THRESHOLD = Decimal(100)
