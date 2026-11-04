@@ -1,21 +1,6 @@
 from pathlib import Path
 from enum import Enum
 from decimal import Decimal
-# from abc import ABC, abstractmethod
-
-
-# class Everything(ABC):
-#     @abstractmethod
-#     def send(self, x):
-#         pass
-
-#     @abstractmethod
-#     def save(self, x):
-#         pass
-
-#     @abstractmethod
-#     def refund(self, x):
-#         pass
 
 
 class Order:
@@ -53,9 +38,6 @@ class Order:
     def save(self, x):
         with Path("orders.txt").open("a", encoding="utf-8") as f:
             f.write(x + "\n")
-
-    def refund(self, x):
-        raise NotImplementedError("Not supported")
 
 
 def getProductPrice(product):
