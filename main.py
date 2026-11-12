@@ -59,14 +59,8 @@ class OrderProcessor:
         order = Order(orderInformationString)
         details = order.details
 
-        price = details.products.getTotalPrice()
+        price = calculatePrice(details)
         productsDescription = str(details.products)
-
-        price = applyMemberDiscount(price, details.memberType)
-        price = applyCouponDiscount(price, details.discountCode)
-
-        price = applyDeliveryCost(price)
-        price = applyTaxes(price)
 
         orderDescription = f"ORDER|{details.name}|{productsDescription}|{price:.2f}"
         self.counter += 1
@@ -85,6 +79,14 @@ class OrderProcessor:
 
     def report(self):
         print(f"REPORT|{self.counter}|{self.total:.2f}")
+
+
+def calculatePrice(details):
+    price = details.products.getTotalPrice()
+    price = applyMemberDiscount(price, details.memberType)
+    price = applyCouponDiscount(price, details.discountCode)
+    price = applyDeliveryCost(price)
+    return applyTaxes(price)
 
 
 def handleCommand(processor, commandLine):
