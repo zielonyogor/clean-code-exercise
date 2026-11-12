@@ -115,7 +115,7 @@ class OrderProcessor:
             if verbose:
                 print(orderDescription)
             return orderDescription
-        except Exception:
+        except OSError:
             return "ERROR"
 
     def report(self):
