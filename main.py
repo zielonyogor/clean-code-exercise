@@ -102,7 +102,7 @@ class OrderProcessor:
         self.counter = 0
         self.total = 0
 
-    def order(self, orderInformationString, verbose=True):
+    def order(self, orderInformationString):
         order = parseOrder(orderInformationString)
         price = calculatePrice(order)
         orderDescription = f"ORDER|{order.name}|{order.describeProducts()}|{price:.2f}"
@@ -115,12 +115,10 @@ class OrderProcessor:
         self.counter += 1
         self.total += price
         self.notifier.send(order.email, orderDescription)
-        if verbose:
-            print(orderDescription)
         return orderDescription
 
     def report(self):
-        print(f"REPORT|{self.counter}|{self.total:.2f}")
+        return f"REPORT|{self.counter}|{self.total:.2f}"
 
 
 def calculatePrice(order):
@@ -161,6 +159,6 @@ def applyTaxes(price):
 if __name__ == "__main__":
     processor = OrderProcessor(FileOrderRepository(Path("orders.txt")), ConsoleNotifier())
 
-    handleCommand(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10")
-    handleCommand(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE")
-    handleCommand(processor, "REPORT")
+    print(handleCommand(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10"))
+    print(handleCommand(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE"))
+    print(handleCommand(processor, "REPORT"))
