@@ -1,6 +1,7 @@
 from pathlib import Path
 from enum import Enum
 from decimal import Decimal
+from dataclasses import dataclass
 
 
 class MemberType(Enum):
@@ -34,34 +35,50 @@ def getProductPrice(product):
     return PRODUCT_PRICE.get(product, 0)
 
 
+@dataclass
+class OrderLine:
+    product: str
+    quantity: int
+
+    def getPrice(self):
+        return getProductPrice(self.product) * self.quantity
+
+    def __str__(self):
+        return f"{self.product}x{self.quantity};"
+
+
+@dataclass
 class Order:
-    def __init__(self, orderStringRepresentation):
-        self.details = self.OrderDetails(orderStringRepresentation)
+    name: str
+    email: str
+    memberType: MemberType
+    lines: list[OrderLine]
+    couponCode: str
 
-    class ProductsHolder:
-        def __init__(self, productsStringRepresentation):
-            self.products = []
-            for productWithQuantity in productsStringRepresentation.split(','):
-                product, quantityStr = productWithQuantity.split(":")
-                self.products.append([product, int(quantityStr)])
+    def getSubtotal(self):
+        return sum(line.getPrice() for line in self.lines)
 
-        def getTotalPrice(self):
-            return sum([getProductPrice(product) * quantity for product, quantity in self.products])
+    def describeProducts(self):
+        return "".join(str(line) for line in self.lines)
 
-        def __str__(self):
-            return "".join(f"{product}x{quantity};" for product, quantity in self.products)
 
-    class OrderDetails:
-        def __init__(self, orderStringRepresentation):
-            self.__extractDetails(orderStringRepresentation)
+def parseOrder(orderStringRepresentation):
+    orderInformation = orderStringRepresentation.split("|")
+    return Order(
+        name=orderInformation[0],
+        email=orderInformation[1],
+        memberType=MemberType[orderInformation[2]],
+        lines=parseOrderLines(orderInformation[3]),
+        couponCode=orderInformation[4],
+    )
 
-        def __extractDetails(self, orderStringRepresentation):
-            orderInformation = orderStringRepresentation.split("|")
-            self.name = orderInformation[0]
-            self.email = orderInformation[1]
-            self.memberType = MemberType[orderInformation[2]]
-            self.products = Order.ProductsHolder(orderInformation[3])
-            self.discountCode = orderInformation[4]
+
+def parseOrderLines(productsStringRepresentation):
+    lines = []
+    for productWithQuantity in productsStringRepresentation.split(","):
+        product, quantityStr = productWithQuantity.split(":")
+        lines.append(OrderLine(product, int(quantityStr)))
+    return lines
 
 
 class FileOrderRepository:
@@ -86,19 +103,15 @@ class OrderProcessor:
         self.total = 0
 
     def order(self, orderInformationString, verbose=True):
-        order = Order(orderInformationString)
-        details = order.details
-
-        price = calculatePrice(details)
-        productsDescription = str(details.products)
-
-        orderDescription = f"ORDER|{details.name}|{productsDescription}|{price:.2f}"
+        order = parseOrder(orderInformationString)
+        price = calculatePrice(order)
+        orderDescription = f"ORDER|{order.name}|{order.describeProducts()}|{price:.2f}"
         self.counter += 1
         self.total += price
 
         try:
             self.repository.save(orderDescription)
-            self.notifier.send(details.email, orderDescription)
+            self.notifier.send(order.email, orderDescription)
             if verbose:
                 print(orderDescription)
             return orderDescription
@@ -109,10 +122,10 @@ class OrderProcessor:
         print(f"REPORT|{self.counter}|{self.total:.2f}")
 
 
-def calculatePrice(details):
-    price = details.products.getTotalPrice()
-    price = applyMemberDiscount(price, details.memberType)
-    price = applyCouponDiscount(price, details.discountCode)
+def calculatePrice(order):
+    price = order.getSubtotal()
+    price = applyMemberDiscount(price, order.memberType)
+    price = applyCouponDiscount(price, order.couponCode)
     price = applyDeliveryCost(price)
     return applyTaxes(price)
 
