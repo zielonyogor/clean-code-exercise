@@ -93,3 +93,46 @@ We removed the leftovers of the previous steps and simplified the code.
 | `detail` | `productsDescription` |
 | `_order()` | `order()` |
 | `_showReport()` | `report()` |
+
+## Second round of refactoring
+
+We separated parsing, pricing and side effects, and fixed problems that the first round left behind.
+
+| Change | Reason |
+|--------|--------|
+| `Decimal(0.9)` replaced with `Decimal("0.9")` (same for `0.95`, `0.23`, `1.0`) | a `Decimal` created from a `float` keeps the float error: `Decimal(0.9)` is `0.90000000000000002220...` |
+| `calculatePrice()` extracted from `order()` | the pricing rules are pure business logic and can be tested without files or console |
+| `Order.send()` and `Order.save()` moved to `ConsoleNotifier` and `FileOrderRepository` | an order is data; `OrderProcessor` gets its collaborators from outside (DIP) and tests can pass fakes |
+| `send` and `save` flags removed | not needed when collaborators are injected |
+| constants, `MemberType` and `PRODUCT_PRICE` moved to the top of the file | definitions are read before they are used; `PRODUCT_PRICE` is no longer rebuilt on every call |
+| nested `Order.ProductsHolder` and `Order.OrderDetails` replaced with `@dataclass` `Order` and `OrderLine` | `Order` was only a wrapper around `details`; products are no longer `[product, quantity]` lists |
+| `parseOrder()` extracted | one place that knows the `name\|email\|type\|products\|coupon` format |
+| `except Exception` replaced with `except OSError` around saving only | other errors are no longer hidden behind `ERROR` |
+| `counter` and `total` updated after the order is saved | a failed save no longer counts the order |
+| `order()` and `report()` return strings, `__main__` prints them | both operations behave the same way; `verbose` flag removed |
+| camelCase replaced with snake_case | PEP 8 naming; camelCase was left over from the Java version |
+
+### Behavior changes
+
+The demonstration output stays identical. Only error cases behave differently:
+
+* a failed save returns `ERROR` and is no longer counted in the report
+* parse errors and other non-storage errors are no longer caught
+* `ERROR` and `UNKNOWN` results are printed by `__main__`
+
+### Not changed
+
+* rounding: the report still sums unrounded order totals, as the README requires
+* unknown products still cost 0 and negative quantities are still accepted; fixing them is a behavior change, not refactoring
+
+### Naming
+
+| Old Name | New Name |
+|----------|----------|
+| `ProductsHolder` | `OrderLine` (one per product) |
+| `OrderDetails` | `Order` |
+| `discountCode` | `coupon_code` |
+| `getTotalPrice()` | `get_subtotal()` |
+| `str(details.products)` | `describe_products()` |
+| `orderStringRepresentation`, `orderInformationString` | `order_text` |
+| `getProductPrice()`, `applyTaxes()`, ... | `get_product_price()`, `apply_taxes()`, ... |
