@@ -3,6 +3,37 @@ from enum import Enum
 from decimal import Decimal
 
 
+class MemberType(Enum):
+    REGULAR = 1
+    VIP = 2
+    STUDENT = 3
+
+
+PRODUCT_PRICE = {
+    "BOOK": Decimal(40),
+    "PEN": Decimal(5),
+    "BAG": Decimal(80),
+}
+
+MEMBER_DISCOUNTS = {
+    MemberType.REGULAR: Decimal("1.0"),
+    MemberType.VIP: Decimal("0.9"),
+    MemberType.STUDENT: Decimal("0.95"),
+}
+
+COUPON_DISCOUNTS = {
+    "SAVE10": Decimal("0.9"),
+}
+
+FREE_DELIVERY_THRESHOLD = Decimal(100)
+DELIVERY_COST = Decimal(12)
+TAXES_PERCENTAGE = Decimal("0.23")
+
+
+def getProductPrice(product):
+    return PRODUCT_PRICE.get(product, 0)
+
+
 class Order:
     def __init__(self, orderStringRepresentation):
         self.details = self.OrderDetails(orderStringRepresentation)
@@ -45,16 +76,6 @@ class FileOrderRepository:
 class ConsoleNotifier:
     def send(self, email, message):
         print("EMAIL " + email + "|" + message)
-
-
-def getProductPrice(product):
-    PRODUCT_PRICE = {
-        "BOOK": Decimal(40),
-        "PEN": Decimal(5),
-        "BAG": Decimal(80),
-    }
-
-    return PRODUCT_PRICE.get(product, 0)
 
 
 class OrderProcessor:
@@ -105,23 +126,6 @@ def handleCommand(processor, commandLine):
     return "UNKNOWN"
 
 
-class MemberType(Enum):
-    REGULAR = 1
-    VIP = 2
-    STUDENT = 3
-
-
-MEMBER_DISCOUNTS = {
-    MemberType.REGULAR: Decimal("1.0"),
-    MemberType.VIP: Decimal("0.9"),
-    MemberType.STUDENT: Decimal("0.95"),
-}
-
-COUPON_DISCOUNTS = {
-    "SAVE10": Decimal("0.9"),
-}
-
-
 def applyMemberDiscount(price, memberType):
     return price * MEMBER_DISCOUNTS.get(memberType, Decimal("1.0"))
 
@@ -130,17 +134,10 @@ def applyCouponDiscount(price, couponCode):
     return price * COUPON_DISCOUNTS.get(couponCode, Decimal("1.0"))
 
 
-FREE_DELIVERY_THRESHOLD = Decimal(100)
-DELIVERY_COST = Decimal(12)
-
-
 def applyDeliveryCost(price):
     if price < FREE_DELIVERY_THRESHOLD:
         price += DELIVERY_COST
     return price
-
-
-TAXES_PERCENTAGE = Decimal("0.23")
 
 
 def applyTaxes(price):
