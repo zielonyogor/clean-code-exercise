@@ -32,12 +32,19 @@ class Order:
             self.products = Order.ProductsHolder(orderInformation[3])
             self.discountCode = orderInformation[4]
 
-    def send(self, message):
-        print("EMAIL " + message)
+
+class FileOrderRepository:
+    def __init__(self, path):
+        self.path = path
 
     def save(self, orderDescription):
-        with Path("orders.txt").open("a", encoding="utf-8") as f:
+        with self.path.open("a", encoding="utf-8") as f:
             f.write(orderDescription + "\n")
+
+
+class ConsoleNotifier:
+    def send(self, email, message):
+        print("EMAIL " + email + "|" + message)
 
 
 def getProductPrice(product):
@@ -51,11 +58,13 @@ def getProductPrice(product):
 
 
 class OrderProcessor:
-    def __init__(self):
+    def __init__(self, repository, notifier):
+        self.repository = repository
+        self.notifier = notifier
         self.counter = 0
         self.total = 0
 
-    def order(self, orderInformationString, verbose=True, send=True, save=True):
+    def order(self, orderInformationString, verbose=True):
         order = Order(orderInformationString)
         details = order.details
 
@@ -67,10 +76,8 @@ class OrderProcessor:
         self.total += price
 
         try:
-            if save:
-                order.save(orderDescription)
-            if send:
-                order.send(details.email + "|" + orderDescription)
+            self.repository.save(orderDescription)
+            self.notifier.send(details.email, orderDescription)
             if verbose:
                 print(orderDescription)
             return orderDescription
@@ -141,7 +148,7 @@ def applyTaxes(price):
 
 
 if __name__ == "__main__":
-    processor = OrderProcessor()
+    processor = OrderProcessor(FileOrderRepository(Path("orders.txt")), ConsoleNotifier())
 
     handleCommand(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10")
     handleCommand(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE")
