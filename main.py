@@ -106,17 +106,18 @@ class OrderProcessor:
         order = parseOrder(orderInformationString)
         price = calculatePrice(order)
         orderDescription = f"ORDER|{order.name}|{order.describeProducts()}|{price:.2f}"
-        self.counter += 1
-        self.total += price
 
         try:
             self.repository.save(orderDescription)
-            self.notifier.send(order.email, orderDescription)
-            if verbose:
-                print(orderDescription)
-            return orderDescription
         except OSError:
             return "ERROR"
+
+        self.counter += 1
+        self.total += price
+        self.notifier.send(order.email, orderDescription)
+        if verbose:
+            print(orderDescription)
+        return orderDescription
 
     def report(self):
         print(f"REPORT|{self.counter}|{self.total:.2f}")
