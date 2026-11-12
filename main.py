@@ -103,22 +103,22 @@ class MemberType(Enum):
 
 
 MEMBER_DISCOUNTS = {
-    MemberType.REGULAR: Decimal(1.0),
-    MemberType.VIP: Decimal(0.9),
-    MemberType.STUDENT: Decimal(0.95),
+    MemberType.REGULAR: Decimal("1.0"),
+    MemberType.VIP: Decimal("0.9"),
+    MemberType.STUDENT: Decimal("0.95"),
 }
 
 COUPON_DISCOUNTS = {
-    "SAVE10": Decimal(0.9),
+    "SAVE10": Decimal("0.9"),
 }
 
 
 def applyMemberDiscount(price, memberType):
-    return price * MEMBER_DISCOUNTS.get(memberType, Decimal(1.0))
+    return price * MEMBER_DISCOUNTS.get(memberType, Decimal("1.0"))
 
 
 def applyCouponDiscount(price, couponCode):
-    return price * COUPON_DISCOUNTS.get(couponCode, Decimal(1.0))
+    return price * COUPON_DISCOUNTS.get(couponCode, Decimal("1.0"))
 
 
 FREE_DELIVERY_THRESHOLD = Decimal(100)
@@ -131,7 +131,7 @@ def applyDeliveryCost(price):
     return price
 
 
-TAXES_PERCENTAGE = Decimal(0.23)
+TAXES_PERCENTAGE = Decimal("0.23")
 
 
 def applyTaxes(price):
