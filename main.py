@@ -31,7 +31,7 @@ DELIVERY_COST = Decimal(12)
 TAXES_PERCENTAGE = Decimal("0.23")
 
 
-def getProductPrice(product):
+def get_product_price(product):
     return PRODUCT_PRICE.get(product, 0)
 
 
@@ -40,8 +40,8 @@ class OrderLine:
     product: str
     quantity: int
 
-    def getPrice(self):
-        return getProductPrice(self.product) * self.quantity
+    def get_price(self):
+        return get_product_price(self.product) * self.quantity
 
     def __str__(self):
         return f"{self.product}x{self.quantity};"
@@ -51,33 +51,33 @@ class OrderLine:
 class Order:
     name: str
     email: str
-    memberType: MemberType
+    member_type: MemberType
     lines: list[OrderLine]
-    couponCode: str
+    coupon_code: str
 
-    def getSubtotal(self):
-        return sum(line.getPrice() for line in self.lines)
+    def get_subtotal(self):
+        return sum(line.get_price() for line in self.lines)
 
-    def describeProducts(self):
+    def describe_products(self):
         return "".join(str(line) for line in self.lines)
 
 
-def parseOrder(orderStringRepresentation):
-    orderInformation = orderStringRepresentation.split("|")
+def parse_order(order_text):
+    order_information = order_text.split("|")
     return Order(
-        name=orderInformation[0],
-        email=orderInformation[1],
-        memberType=MemberType[orderInformation[2]],
-        lines=parseOrderLines(orderInformation[3]),
-        couponCode=orderInformation[4],
+        name=order_information[0],
+        email=order_information[1],
+        member_type=MemberType[order_information[2]],
+        lines=parse_order_lines(order_information[3]),
+        coupon_code=order_information[4],
     )
 
 
-def parseOrderLines(productsStringRepresentation):
+def parse_order_lines(products_text):
     lines = []
-    for productWithQuantity in productsStringRepresentation.split(","):
-        product, quantityStr = productWithQuantity.split(":")
-        lines.append(OrderLine(product, int(quantityStr)))
+    for product_with_quantity in products_text.split(","):
+        product, quantity_text = product_with_quantity.split(":")
+        lines.append(OrderLine(product, int(quantity_text)))
     return lines
 
 
@@ -85,9 +85,9 @@ class FileOrderRepository:
     def __init__(self, path):
         self.path = path
 
-    def save(self, orderDescription):
+    def save(self, order_description):
         with self.path.open("a", encoding="utf-8") as f:
-            f.write(orderDescription + "\n")
+            f.write(order_description + "\n")
 
 
 class ConsoleNotifier:
@@ -102,35 +102,35 @@ class OrderProcessor:
         self.counter = 0
         self.total = 0
 
-    def order(self, orderInformationString):
-        order = parseOrder(orderInformationString)
-        price = calculatePrice(order)
-        orderDescription = f"ORDER|{order.name}|{order.describeProducts()}|{price:.2f}"
+    def order(self, order_text):
+        order = parse_order(order_text)
+        price = calculate_price(order)
+        order_description = f"ORDER|{order.name}|{order.describe_products()}|{price:.2f}"
 
         try:
-            self.repository.save(orderDescription)
+            self.repository.save(order_description)
         except OSError:
             return "ERROR"
 
         self.counter += 1
         self.total += price
-        self.notifier.send(order.email, orderDescription)
-        return orderDescription
+        self.notifier.send(order.email, order_description)
+        return order_description
 
     def report(self):
         return f"REPORT|{self.counter}|{self.total:.2f}"
 
 
-def calculatePrice(order):
-    price = order.getSubtotal()
-    price = applyMemberDiscount(price, order.memberType)
-    price = applyCouponDiscount(price, order.couponCode)
-    price = applyDeliveryCost(price)
-    return applyTaxes(price)
+def calculate_price(order):
+    price = order.get_subtotal()
+    price = apply_member_discount(price, order.member_type)
+    price = apply_coupon_discount(price, order.coupon_code)
+    price = apply_delivery_cost(price)
+    return apply_taxes(price)
 
 
-def handleCommand(processor, commandLine):
-    command, _, payload = commandLine.partition(" ")
+def handle_command(processor, command_line):
+    command, _, payload = command_line.partition(" ")
     if command == "ORDER":
         return processor.order(payload)
     if command == "REPORT":
@@ -138,27 +138,27 @@ def handleCommand(processor, commandLine):
     return "UNKNOWN"
 
 
-def applyMemberDiscount(price, memberType):
-    return price * MEMBER_DISCOUNTS.get(memberType, Decimal("1.0"))
+def apply_member_discount(price, member_type):
+    return price * MEMBER_DISCOUNTS.get(member_type, Decimal("1.0"))
 
 
-def applyCouponDiscount(price, couponCode):
-    return price * COUPON_DISCOUNTS.get(couponCode, Decimal("1.0"))
+def apply_coupon_discount(price, coupon_code):
+    return price * COUPON_DISCOUNTS.get(coupon_code, Decimal("1.0"))
 
 
-def applyDeliveryCost(price):
+def apply_delivery_cost(price):
     if price < FREE_DELIVERY_THRESHOLD:
         price += DELIVERY_COST
     return price
 
 
-def applyTaxes(price):
+def apply_taxes(price):
     return price * (1 + TAXES_PERCENTAGE)
 
 
 if __name__ == "__main__":
     processor = OrderProcessor(FileOrderRepository(Path("orders.txt")), ConsoleNotifier())
 
-    print(handleCommand(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10"))
-    print(handleCommand(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE"))
-    print(handleCommand(processor, "REPORT"))
+    print(handle_command(processor, "ORDER Alice|alice@example.test|VIP|BOOK:2,PEN:3|SAVE10"))
+    print(handle_command(processor, "ORDER Bob|bob@example.test|REGULAR|BAG:2|NONE"))
+    print(handle_command(processor, "REPORT"))
